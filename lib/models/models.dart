@@ -78,22 +78,32 @@ class OrderItemRow {
 class OrderRow {
   final int id;
   final String customerName, paymentMethod, paymentStatus, status, deliveryAddress, createdAt;
-  final double totalAmount;
+  final String? customerPhone, customerEmail, promoCode, paymentScreenshotPath, riderName;
+  final double totalAmount, subTotal, discount;
   final List<OrderItemRow> items;
 
   OrderRow.fromJson(Map<String, dynamic> j)
       : id = _int(j['id']),
         customerName = _str(j['customerName']),
+        customerPhone = _as<String>(j['customerPhone']),
+        customerEmail = _as<String>(j['customerEmail']),
         paymentMethod = _str(j['paymentMethod']),
         paymentStatus = _str(j['paymentStatus']),
+        paymentScreenshotPath = _as<String>(j['paymentScreenshotPath']),
         status = _str(j['status']),
         deliveryAddress = _str(j['deliveryAddress']),
+        promoCode = _as<String>(j['promoCode']),
+        riderName = _as<String>(j['riderName']),
         createdAt = _str(j['createdAt']),
         totalAmount = _dbl(j['totalAmount']),
-        items = ((j['items'] as List?) ?? [])
-            .whereType<Map<String, dynamic>>()
-            .map(OrderItemRow.fromJson)
-            .toList();
+        subTotal = _dbl(j['subTotal']),
+        discount = _dbl(j['discount']),
+        items = (j['items'] is List)
+            ? (j['items'] as List)
+                .whereType<Map<String, dynamic>>()
+                .map(OrderItemRow.fromJson)
+                .toList()
+            : const [];
 }
 
 // Pending payment awaiting vendor verification. The backend shape may vary;

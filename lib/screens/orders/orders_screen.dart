@@ -66,12 +66,24 @@ class OrdersScreen extends ConsumerWidget {
         ),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         children: [
-          Align(
+          _detailRow('Customer', o.customerName),
+          if (o.customerPhone != null && o.customerPhone!.isNotEmpty)
+            _detailRow('Phone', o.customerPhone!),
+          if (o.customerEmail != null && o.customerEmail!.isNotEmpty)
+            _detailRow('Email', o.customerEmail!),
+          _detailRow('Delivery address', o.deliveryAddress),
+          _detailRow('Payment', '${o.paymentMethod} • ${o.paymentStatus}'),
+          if (o.promoCode != null && o.promoCode!.isNotEmpty)
+            _detailRow('Promo', o.promoCode!),
+          if (o.riderName != null && o.riderName!.isNotEmpty)
+            _detailRow('Rider', o.riderName!),
+          const Divider(height: 20),
+          const Align(
             alignment: Alignment.centerLeft,
-            child: Text('Delivery: ${o.deliveryAddress}',
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+            child: Text('Items',
+                style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.text)),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           ...o.items.map((it) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 child: Row(
@@ -85,6 +97,35 @@ class OrdersScreen extends ConsumerWidget {
                   ],
                 ),
               )),
+          const Divider(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Total', style: TextStyle(fontWeight: FontWeight.w700)),
+              Text('Rs ${o.totalAmount.toStringAsFixed(0)}',
+                  style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 130,
+            child: Text(label,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+          ),
+          Expanded(
+            child: Text(value,
+                style: const TextStyle(color: AppColors.text, fontSize: 13)),
+          ),
         ],
       ),
     );
