@@ -50,29 +50,22 @@ class DashboardScreen extends ConsumerWidget {
             data: (p) => p == null ? const SizedBox() : _profileCard(p),
           ),
           const SizedBox(height: 20),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _statCard(
+          LayoutBuilder(
+            builder: (context, c) {
+              final cards = <Widget>[
+                _statCard(
                   'Products',
                   products.maybeWhen(data: (l) => l.length.toString(), orElse: () => '—'),
                   Icons.inventory_2,
                   AppColors.primaryLight,
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _statCard(
+                _statCard(
                   'Orders',
                   orders.maybeWhen(data: (l) => l.length.toString(), orElse: () => '—'),
                   Icons.receipt_long,
                   AppColors.primary,
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _statCard(
+                _statCard(
                   'Out of stock',
                   products.maybeWhen(
                       data: (l) => l.where((p) => p.stock == 0).length.toString(),
@@ -80,8 +73,24 @@ class DashboardScreen extends ConsumerWidget {
                   Icons.warning_amber,
                   AppColors.warning,
                 ),
-              ),
-            ],
+              ];
+
+              // Each card needs ~220px to look right. Fit as many per row as we
+              // can, then stack the rest — so phones get one per row.
+              final int perRow =
+                  (c.maxWidth / 220).floor().clamp(1, cards.length).toInt();
+              final double cardWidth = perRow == 1
+                  ? c.maxWidth
+                  : (c.maxWidth - (16.0 * (perRow - 1))) / perRow;
+
+              return Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: cards
+                    .map((card) => SizedBox(width: cardWidth, child: card))
+                    .toList(),
+              );
+            },
           ),
         ],
       ),
@@ -115,45 +124,76 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _profileCard(VendorProfile p) {    return Card(
+  Widget _profileCard(VendorProfile p) {
+    final badge = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        StatusBadge(p.isApproved ? 'Approved' : 'Pending'),
+        const SizedBox(height: 6),
+        Text('Commission ${p.commissionRate.toStringAsFixed(1)}%',
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+      ],
+    );
+
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(p.businessName,
+            style: const TextStyle(
+                fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text)),
+        const SizedBox(height: 4),
+        Text('${p.ownerName} • ${p.phone}',
+            style: const TextStyle(color: AppColors.textMuted)),
+        const SizedBox(height: 2),
+        Text(p.businessAddress, style: const TextStyle(color: AppColors.textMuted)),
+      ],
+    );
+
+    final avatar = Container(
+      height: 56,
+      width: 56,
+      decoration: BoxDecoration(
+          color: AppColors.primary.withAlpha(24),
+          borderRadius: BorderRadius.circular(12)),
+      child: const Icon(Icons.store, color: AppColors.primary, size: 28),
+    );
+
+    return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              height: 56,
-              width: 56,
-              decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(24),
-                  borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.store, color: AppColors.primary, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
+        child: LayoutBuilder(
+          builder: (context, c) {
+            // On phones, put the status badge on its own line below the details
+            // so nothing is squeezed or clipped.
+            if (c.maxWidth < 520) {
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(p.businessName,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.text)),
-                  const SizedBox(height: 4),
-                  Text('${p.ownerName} • ${p.phone}',
-                      style: const TextStyle(color: AppColors.textMuted)),
-                  const SizedBox(height: 2),
-                  Text(p.businessAddress, style: const TextStyle(color: AppColors.textMuted)),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      avatar,
+                      const SizedBox(width: 16),
+                      Expanded(child: details),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  badge,
                 ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                StatusBadge(p.isApproved ? 'Approved' : 'Pending'),
-                const SizedBox(height: 8),
-                Text('Commission ${p.commissionRate.toStringAsFixed(1)}%',
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                avatar,
+                const SizedBox(width: 16),
+                Expanded(child: details),
+                const SizedBox(width: 12),
+                Align(alignment: Alignment.centerRight, child: badge),
               ],
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

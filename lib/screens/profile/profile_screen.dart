@@ -44,15 +44,34 @@ class ProfileScreen extends ConsumerWidget {
   Widget _detail(VendorProfile p) {
     Widget row(String label, String value) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                  width: 180,
-                  child: Text(label,
-                      style: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w500))),
-              Expanded(child: Text(value, style: const TextStyle(color: AppColors.text))),
-            ],
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final labelWidget = Text(label,
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontWeight: FontWeight.w500));
+              final valueWidget =
+                  Text(value, style: const TextStyle(color: AppColors.text));
+
+              // On narrow screens stack the label above the value.
+              if (c.maxWidth < 480) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    labelWidget,
+                    const SizedBox(height: 2),
+                    valueWidget,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(width: 180, child: labelWidget),
+                  Expanded(child: valueWidget),
+                ],
+              );
+            },
           ),
         );
 
