@@ -6,23 +6,27 @@ import 'token_store.dart';
 // backend's { success, message, data } envelope into a simple ApiResult.
 class ApiClient {
   ApiClient._() {
-    _dio = Dio(BaseOptions(
-      baseUrl: '${AppConfig.baseUrl}${AppConfig.apiPrefix}',
-      connectTimeout: const Duration(seconds: 20),
-      receiveTimeout: const Duration(seconds: 20),
-      // Don't throw on non-2xx — we handle status codes ourselves.
-      validateStatus: (_) => true,
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: '${AppConfig.baseUrl}${AppConfig.apiPrefix}',
+        connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 20),
+        // Don't throw on non-2xx — we handle status codes ourselves.
+        validateStatus: (_) => true,
+      ),
+    );
 
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await TokenStore.token();
-        if (token != null && token.isNotEmpty) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        handler.next(options);
-      },
-    ));
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await TokenStore.token();
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          handler.next(options);
+        },
+      ),
+    );
   }
 
   static final ApiClient instance = ApiClient._();
@@ -34,21 +38,22 @@ class ApiClient {
   Future<ApiResult> post(String path, {dynamic body}) async =>
       _wrap(() => _dio.post(path, data: body));
 
-  Future<ApiResult> put(String path, {dynamic body}) async =>
-      _wrap(() => _dio.put(path, data: body));
-
-  Future<ApiResult> delete(String path) async =>
-      _wrap(() => _dio.delete(path));
-
-  // Upload a file as multipart/form-data under the field name "file".
-  // Works on web by sending raw bytes. Returns the saved path in result.data
-  // (the backend responds with { data: { path } }, so data here is { path }).
-  Future<ApiResult> uploadBytes(String path, List<int> bytes, String filename) async {
+  // Multipart upload: field name "file", used by all /Uploads/* endpoints.
+  Future<ApiResult> uploadBytes(
+    String path,
+    List<int> bytes,
+    String filename,
+  ) async {
     final form = FormData.fromMap({
       'file': MultipartFile.fromBytes(bytes, filename: filename),
     });
     return _wrap(() => _dio.post(path, data: form));
   }
+
+  Future<ApiResult> put(String path, {dynamic body}) async =>
+      _wrap(() => _dio.put(path, data: body));
+
+  Future<ApiResult> delete(String path) async => _wrap(() => _dio.delete(path));
 
   Future<ApiResult> _wrap(Future<Response> Function() call) async {
     try {
@@ -58,7 +63,8 @@ class ApiClient {
 
       // Backend usually returns { success, message, data }.
       if (data is Map<String, dynamic>) {
-        final success = (data['success'] == true) || (code >= 200 && code < 300);
+        final success =
+            (data['success'] == true) || (code >= 200 && code < 300);
         return ApiResult(
           ok: success && code >= 200 && code < 300,
           statusCode: code,

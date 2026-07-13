@@ -45,14 +45,25 @@ class VendorService {
     return _list(res.data).map(OrderRow.fromJson).toList();
   }
 
+  // Vendor updates an order's status. Backend allows a vendor to set
+  // Processing (= confirm), Dispatched, or Cancelled — and only on orders
+  // that contain the vendor's products. The customer gets a push
+  // notification automatically for every status change.
+  Future<ApiResult> updateOrderStatus(int orderId, String status) =>
+      _api.put('/Orders/$orderId/status', body: {'status': status});
+
   // ── Payments to verify ──
   Future<List<PendingPayment>> pendingPayments() async {
     final res = await _api.get('/Payments/pending');
     return _list(res.data).map(PendingPayment.fromJson).toList();
   }
 
-  Future<ApiResult> verifyPayment(int id, bool approved) =>
-      _api.post('/Payments/verify', body: {'id': id, 'approved': approved});
+  // Backend contract: { type: "Order"|"Booking", id, approve }.
+  Future<ApiResult> verifyPayment(String type, int id, bool approve) =>
+      _api.post(
+        '/Payments/verify',
+        body: {'type': type, 'id': id, 'approve': approve},
+      );
 
   // ── Public vendor self-registration ──
   // Uploads happen first (getting server paths), then this creates the account
@@ -69,31 +80,44 @@ class VendorService {
     required String nidPath,
     required String businessDocPath,
   }) async {
-    final res = await _api.post('/Vendors/register', body: {
-      'fullName': fullName,
-      'phone': phone,
-      if (email != null && email.isNotEmpty) 'email': email,
-      'password': password,
-      'address': address,
-      'businessName': businessName,
-      'businessAddress': businessAddress,
-      'citizenshipDocumentPath': citizenshipPath,
-      'nidDocumentPath': nidPath,
-      'businessDocumentPath': businessDocPath,
-    });
-    return (ok: res.ok, message: res.message ?? (res.ok ? 'Registered.' : 'Registration failed.'));
+    final res = await _api.post(
+      '/Vendors/register',
+      body: {
+        'fullName': fullName,
+        'phone': phone,
+        if (email != null && email.isNotEmpty) 'email': email,
+        'password': password,
+        'address': address,
+        'businessName': businessName,
+        'businessAddress': businessAddress,
+        'citizenshipDocumentPath': citizenshipPath,
+        'nidDocumentPath': nidPath,
+        'businessDocumentPath': businessDocPath,
+      },
+    );
+    return (
+      ok: res.ok,
+      message: res.message ?? (res.ok ? 'Registered.' : 'Registration failed.'),
+    );
   }
 
   // Upload a document (citizenship / NID / business) → server path.
   // Uses the KYC upload endpoint which accepts images/pdf.
   Future<({bool ok, String message, String? path})> uploadDocument(
-      List<int> bytes, String filename) async {
+    List<int> bytes,
+    String filename,
+  ) async {
     final res = await _api.uploadBytes('/Uploads/kyc', bytes, filename);
-    if (!res.ok) return (ok: false, message: res.message ?? 'Upload failed.', path: null);
+    if (!res.ok)
+      return (ok: false, message: res.message ?? 'Upload failed.', path: null);
     final data = res.data;
     final path = (data is Map) ? data['path']?.toString() : null;
     if (path == null || path.isEmpty) {
-      return (ok: false, message: 'Upload succeeded but no path returned.', path: null);
+      return (
+        ok: false,
+        message: 'Upload succeeded but no path returned.',
+        path: null,
+      );
     }
     return (ok: true, message: 'Uploaded.', path: path);
   }
@@ -107,13 +131,20 @@ class VendorService {
 
   // Upload a KYC document (image/pdf bytes) → returns the saved server path.
   Future<({bool ok, String message, String? path})> uploadKycFile(
-      List<int> bytes, String filename) async {
+    List<int> bytes,
+    String filename,
+  ) async {
     final res = await _api.uploadBytes('/Uploads/kyc', bytes, filename);
-    if (!res.ok) return (ok: false, message: res.message ?? 'Upload failed.', path: null);
+    if (!res.ok)
+      return (ok: false, message: res.message ?? 'Upload failed.', path: null);
     final data = res.data;
     final path = (data is Map) ? data['path']?.toString() : null;
     if (path == null || path.isEmpty) {
-      return (ok: false, message: 'Upload succeeded but no path returned.', path: null);
+      return (
+        ok: false,
+        message: 'Upload succeeded but no path returned.',
+        path: null,
+      );
     }
     return (ok: true, message: 'Uploaded.', path: path);
   }
@@ -124,13 +155,20 @@ class VendorService {
 
   // Upload a product image → returns its server path.
   Future<({bool ok, String message, String? path})> uploadProductImage(
-      List<int> bytes, String filename) async {
+    List<int> bytes,
+    String filename,
+  ) async {
     final res = await _api.uploadBytes('/Uploads/product', bytes, filename);
-    if (!res.ok) return (ok: false, message: res.message ?? 'Upload failed.', path: null);
+    if (!res.ok)
+      return (ok: false, message: res.message ?? 'Upload failed.', path: null);
     final data = res.data;
     final path = (data is Map) ? data['path']?.toString() : null;
     if (path == null || path.isEmpty) {
-      return (ok: false, message: 'Upload succeeded but no path returned.', path: null);
+      return (
+        ok: false,
+        message: 'Upload succeeded but no path returned.',
+        path: null,
+      );
     }
     return (ok: true, message: 'Uploaded.', path: path);
   }
