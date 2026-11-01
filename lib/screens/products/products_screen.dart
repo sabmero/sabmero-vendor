@@ -132,6 +132,9 @@ class ProductsScreen extends ConsumerWidget {
     final price = TextEditingController(
       text: existing?.price.toStringAsFixed(0) ?? '',
     );
+    final oldPrice = TextEditingController(
+      text: existing?.oldPrice?.toStringAsFixed(0) ?? '',
+    );
     final stock = TextEditingController(text: existing?.stock.toString() ?? '');
     // All product images — first one is the cover shown in lists.
     final List<String> imagePaths = List.of(existing?.imagePaths ?? const []);
@@ -181,6 +184,16 @@ class ProductsScreen extends ConsumerWidget {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: oldPrice,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Old price (Rs) - optional, for discount',
+                      helperText:
+                          'Fill only if on discount. Must be higher than Price.',
+                    ),
                   ),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<int>(
@@ -344,6 +357,13 @@ class ProductsScreen extends ConsumerWidget {
 
     final priceVal = double.tryParse(price.text.trim()) ?? 0;
     final stockVal = int.tryParse(stock.text.trim()) ?? 0;
+    final oldPriceVal = double.tryParse(oldPrice.text.trim());
+    if (oldPriceVal != null && oldPriceVal <= priceVal) {
+      if (context.mounted) {
+        toast(context, 'Old price must be higher than Price.', error: true);
+      }
+      return;
+    }
     if (name.text.trim().isEmpty || desc.text.trim().isEmpty || priceVal <= 0) {
       if (context.mounted)
         toast(
@@ -358,6 +378,7 @@ class ProductsScreen extends ConsumerWidget {
       'name': name.text.trim(),
       'description': desc.text.trim(),
       'price': priceVal,
+      'oldPrice': oldPriceVal,
       'stock': stockVal,
       'categoryId': categoryId,
       'imagePath': imagePaths.isEmpty ? null : imagePaths.first,
