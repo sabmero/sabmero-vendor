@@ -8,6 +8,7 @@ import 'orders/orders_screen.dart';
 import 'payments/payments_screen.dart';
 import 'kyc/kyc_screen.dart';
 import 'profile/profile_screen.dart';
+import '../widgets/notification_bell.dart';
 
 // Responsive layout: permanent sidebar on wide screens, hamburger drawer on
 // phones/narrow screens.
@@ -114,6 +115,22 @@ class _VendorShellState extends ConsumerState<VendorShell> {
     );
   }
 
+  // Jump to the screen related to a tapped notification.
+  void _openFromNotification(NotificationItem n) {
+    final t = n.type.toLowerCase();
+    String? label;
+    if (t.startsWith('order')) {
+      label = 'Orders';
+    } else if (t.contains('payment')) {
+      label = 'Payments';
+    } else if (t.startsWith('vendor_request')) {
+      label = 'KYC';
+    }
+    if (label == null) return;
+    final i = _items.indexWhere((e) => e.label == label);
+    if (i >= 0) setState(() => _index = i);
+  }
+
   Widget _topBar(bool wide, WidgetRef ref) {
     final nameAsync = ref.watch(vendorNameProvider);
     return Container(
@@ -135,6 +152,8 @@ class _VendorShellState extends ConsumerState<VendorShell> {
                 style: const TextStyle(
                     fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.text)),
           ),
+          NotificationBell(onOpen: _openFromNotification),
+          const SizedBox(width: 4),
           const Icon(Icons.account_circle_outlined, color: AppColors.textMuted),
           const SizedBox(width: 8),
           nameAsync.maybeWhen(
