@@ -6,6 +6,16 @@ double _dbl(dynamic v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
 bool _bool(dynamic v) => v == true;
 String _str(dynamic v) => v?.toString() ?? '';
 
+// Gallery images: prefer the imagePaths list, fall back to the single cover.
+List<String> _imageList(dynamic list, dynamic cover) {
+  if (list is List) {
+    final l = list.map((e) => e.toString()).where((e) => e.isNotEmpty).toList();
+    if (l.isNotEmpty) return l;
+  }
+  final c = cover?.toString() ?? '';
+  return c.isEmpty ? <String>[] : <String>[c];
+}
+
 class VendorProfile {
   final int id, userId, productCount;
   final String ownerName, phone, businessName, businessAddress;
@@ -30,6 +40,7 @@ class Product {
   final int id, vendorId, categoryId, stock, reviewCount;
   final String name, description, categoryName, vendorName;
   final String? imagePath, sizeOptions, colorOptions, unit;
+  final List<String> imagePaths;
   final double price, averageRating;
   final bool isActive;
   final String createdAt;
@@ -48,6 +59,7 @@ class Product {
         sizeOptions = _as<String>(j['sizeOptions']),
         colorOptions = _as<String>(j['colorOptions']),
         unit = _as<String>(j['unit']),
+        imagePaths = _imageList(j['imagePaths'], j['imagePath']),
         price = _dbl(j['price']),
         averageRating = _dbl(j['averageRating']),
         isActive = _bool(j['isActive']),
@@ -111,6 +123,7 @@ class OrderRow {
 class PendingPayment {
   final int id;
   final String reference, method, status, createdAt;
+  final String type; // "Order" | "Booking"
   final double amount;
   final String? screenshotPath, customerName;
 
@@ -120,6 +133,9 @@ class PendingPayment {
         method = _str(j['paymentMethod'] ?? j['method']),
         status = _str(j['paymentStatus'] ?? j['status']),
         createdAt = _str(j['createdAt']),
+        type = _str(j['type']).isNotEmpty
+            ? _str(j['type'])
+            : (j['bookingId'] != null ? 'Booking' : 'Order'),
         amount = _dbl(j['amount'] ?? j['totalAmount']),
         screenshotPath = _as<String>(j['paymentScreenshotPath'] ?? j['screenshotPath']),
         customerName = _as<String>(j['customerName']);
