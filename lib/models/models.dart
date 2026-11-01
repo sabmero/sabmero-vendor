@@ -42,6 +42,7 @@ class Product {
   final String? imagePath, sizeOptions, colorOptions, unit;
   final List<String> imagePaths;
   final double price, averageRating;
+  final double? oldPrice;
   final bool isActive;
   final String createdAt;
 
@@ -61,6 +62,7 @@ class Product {
         unit = _as<String>(j['unit']),
         imagePaths = _imageList(j['imagePaths'], j['imagePath']),
         price = _dbl(j['price']),
+        oldPrice = j['oldPrice'] == null ? null : _dbl(j['oldPrice']),
         averageRating = _dbl(j['averageRating']),
         isActive = _bool(j['isActive']),
         createdAt = _str(j['createdAt']);
