@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppConfig {
-  static const String baseUrl = 'http://165.22.247.79:8080';
+  static const String baseUrl = 'https://api.sabmero.com';
   static const String apiPrefix = '/api';
 }
 
