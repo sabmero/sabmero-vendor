@@ -48,6 +48,7 @@ class ProductsScreen extends ConsumerWidget {
                   DataColumn(label: Text('Category')),
                   DataColumn(label: Text('Price')),
                   DataColumn(label: Text('Stock')),
+                  DataColumn(label: Text('Warranty')),
                   DataColumn(label: Text('Rating')),
                   DataColumn(label: Text('Active')),
                   DataColumn(label: Text('Actions')),
@@ -81,6 +82,7 @@ class ProductsScreen extends ConsumerWidget {
             ),
           ),
         ),
+        DataCell(Text(warrantyLabel(p.warrantyMonths))),
         DataCell(
           Text(
             p.reviewCount == 0
@@ -141,6 +143,13 @@ class ProductsScreen extends ConsumerWidget {
     final unit = TextEditingController(text: existing?.unit ?? '');
     int categoryId = existing?.categoryId ?? categories.first.id;
     bool active = existing?.isActive ?? true;
+    // Warranty the customer gets, counted from the day the order is delivered.
+    int warrantyMonths = existing?.warrantyMonths ?? 0;
+    final warrantyTerms = TextEditingController(
+      text: existing?.warrantyTerms ?? '',
+    );
+    final warrantyChoices = <int>{0, 3, 6, 12, 24, 36, 60, warrantyMonths}.toList()
+      ..sort();
 
     final ok = await showDialog<bool>(
       context: context,
@@ -217,6 +226,37 @@ class ProductsScreen extends ConsumerWidget {
                       labelText: 'Unit (optional, e.g. Kg)',
                     ),
                   ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<int>(
+                    value: warrantyMonths,
+                    decoration: const InputDecoration(
+                      labelText: 'Warranty',
+                      helperText:
+                          'Starts when the order is delivered. Customers see the end date.',
+                    ),
+                    items: warrantyChoices
+                        .map(
+                          (m) => DropdownMenuItem(
+                            value: m,
+                            child: Text(m == 0 ? 'No warranty' : warrantyLabel(m)),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) =>
+                        setLocal(() => warrantyMonths = v ?? warrantyMonths),
+                  ),
+                  if (warrantyMonths > 0) ...[
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: warrantyTerms,
+                      maxLines: 2,
+                      maxLength: 500,
+                      decoration: const InputDecoration(
+                        labelText: 'Warranty terms (optional)',
+                        helperText: 'e.g. Covers manufacturing defects. Keep the bill.',
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 10),
                   // ── Product images (multiple; first = cover) ──────────
                   Align(
@@ -384,6 +424,8 @@ class ProductsScreen extends ConsumerWidget {
       'imagePath': imagePaths.isEmpty ? null : imagePaths.first,
       'imagePaths': imagePaths,
       'unit': unit.text.trim().isEmpty ? null : unit.text.trim(),
+      'warrantyMonths': warrantyMonths,
+      'warrantyTerms': warrantyMonths > 0 ? warrantyTerms.text.trim() : '',
     };
     if (existing != null) body['isActive'] = active;
 
@@ -416,4 +458,14 @@ class ProductsScreen extends ConsumerWidget {
     );
     if (res.ok) _refresh(ref);
   }
+}
+
+/// "1 year", "2 years", "6 months", "None".
+String warrantyLabel(int months) {
+  if (months <= 0) return 'None';
+  if (months % 12 == 0) {
+    final y = months ~/ 12;
+    return y == 1 ? '1 year' : '$y years';
+  }
+  return '$months months';
 }
