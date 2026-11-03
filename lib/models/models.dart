@@ -38,8 +38,9 @@ class VendorProfile {
 
 class Product {
   final int id, vendorId, categoryId, stock, reviewCount;
+  final int warrantyMonths; // 0 = no warranty
   final String name, description, categoryName, vendorName;
-  final String? imagePath, sizeOptions, colorOptions, unit;
+  final String? imagePath, sizeOptions, colorOptions, unit, warrantyTerms;
   final List<String> imagePaths;
   final double price, averageRating;
   final double? oldPrice;
@@ -52,6 +53,8 @@ class Product {
         categoryId = _int(j['categoryId']),
         stock = _int(j['stock']),
         reviewCount = _int(j['reviewCount']),
+        warrantyMonths = _int(j['warrantyMonths']),
+        warrantyTerms = _as<String>(j['warrantyTerms']),
         name = _str(j['name']),
         description = _str(j['description']),
         categoryName = _str(j['categoryName']),
