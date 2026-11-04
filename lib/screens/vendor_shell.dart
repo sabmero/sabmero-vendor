@@ -5,6 +5,7 @@ import '../providers/providers.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'products/products_screen.dart';
 import 'orders/orders_screen.dart';
+import 'payments/earnings_screen.dart';
 import 'payments/payments_screen.dart';
 import 'kyc/kyc_screen.dart';
 import 'profile/profile_screen.dart';
@@ -36,6 +37,7 @@ class _VendorShellState extends ConsumerState<VendorShell> {
     _NavItem('My Products', Icons.inventory_2_outlined, ProductsScreen()),
     _NavItem('Orders', Icons.receipt_long_outlined, OrdersScreen()),
     _NavItem('Payments', Icons.payments_outlined, PaymentsScreen()),
+    _NavItem('My Earnings', Icons.account_balance_wallet_outlined, EarningsScreen()),
     _NavItem('KYC', Icons.verified_user_outlined, KycScreen()),
     _NavItem('My Profile', Icons.store_outlined, ProfileScreen()),
   ];
@@ -121,6 +123,8 @@ class _VendorShellState extends ConsumerState<VendorShell> {
     String? label;
     if (t.startsWith('order')) {
       label = 'Orders';
+    } else if (t.startsWith('vendorpayment')) {
+      label = 'My Earnings';
     } else if (t.contains('payment')) {
       label = 'Payments';
     } else if (t.startsWith('vendor_request')) {
