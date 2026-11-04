@@ -5,14 +5,13 @@ class AppConfig {
   static const String apiPrefix = '/api';
 }
 
-// Vendor panel uses a blue-leaning accent to visually distinguish it from the
-// admin panel (green). Same neutral surfaces.
+// Same look as the admin panel (deep green).
 class AppColors {
-  static const Color primary = Color(0xFF14467A); // deep blue
-  static const Color primaryLight = Color(0xFF2F77C0);
-  static const Color bg = Color(0xFFF4F6F9);
+  static const Color primary = Color(0xFF0B3D2E); // deep green (matches brand)
+  static const Color primaryLight = Color(0xFF2F8F6F);
+  static const Color bg = Color(0xFFF5F7F6);
   static const Color surface = Colors.white;
-  static const Color border = Color(0xFFE1E6EC);
+  static const Color border = Color(0xFFE1E8E5);
   static const Color text = Color(0xFF1F2933);
   static const Color textMuted = Color(0xFF6B7280);
 
